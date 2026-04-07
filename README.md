@@ -1,36 +1,163 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fidelity Up
 
-## Getting Started
+SaaS Wallet loyalty platform for local merchants — by 14 Level Up
 
-First, run the development server:
+**Live** → https://fidelity-up.vercel.app  
+**Repo** → https://github.com/massimotfbuisness-del/fidelity-up
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Stack
+
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4
+- Supabase (PostgreSQL + RLS multi-tenant) — project: `zrbxgryrgpajqwciuozy` (eu-west-3)
+- AddToWallet.co API (Apple Wallet + Google Wallet)
+- `qrcode.react` — QR generation / `jsqr` — QR camera scanning
+- Vercel — deployment
+
+---
+
+## Env vars required
+
+Create `.env.local` (never commit):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://zrbxgryrgpajqwciuozy.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+ADDTOWALLET_API_KEY=...
+NEXT_PUBLIC_APP_URL=https://fidelity-up.vercel.app
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Same vars must be set in Vercel project settings.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Dev setup
 
-## Learn More
+```bash
+git clone https://github.com/massimotfbuisness-del/fidelity-up
+cd fidelity-up
+npm install
+# create .env.local with vars above
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Current routes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Route | Role | Auth |
+|---|---|---|
+| `/login` | Login / signup | Public |
+| `/merchants` | Commerce selector (agent view) | Auth |
+| `/setup` | Create new commerce | Auth |
+| `/board` | Loyalty board (clients, visits) | Auth |
+| `/board/passes` | Manage Wallet cards | Auth |
+| `/board/settings` | Commerce settings | Auth |
+| `/install/[passId]` | Client install page | Public |
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## DB schema (current)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sql
+tenants  (id, owner_id, name, type, primary_color, phone, address, logo_url)
+passes   (id, tenant_id, type, name, reward_threshold, reward_description, addtowallet_pass_id, install_url, qr_url)
+clients  (id, tenant_id, phone, name, visits_count, last_visit, wallet_pass_id)
+visits   (id, client_id, tenant_id, created_at)
+```
+
+---
+
+## What is built
+
+- Multi-tenant auth (Supabase RLS)
+- Commerce creation in < 30s
+- 4 wallet card types (loyalty, business card, gift, coupon)
+- AddToWallet API integration → QR install
+- Loyalty board: Active / Dormant (+21d) / Rewards sections
+- Visit recording: manual phone input OR camera QR scan
+- Client personal QR on `/install` success screen
+- Commerce selector (agent managing multiple merchants)
+
+---
+
+## What to build next
+
+### Priority 1 — Terrain-ready
+
+- [ ] Roles: `super_admin` / `owner` / `manager` / `staff` + `tenant_members` table
+- [ ] `/install/[passId]` premium mobile landing (logo, email field, strong CTA)
+- [ ] Merchant dashboard: QR install as first screen, large scan button
+- [ ] Super admin cockpit: all merchants, global stats, quick access
+
+### Priority 2 — Scalable architecture
+
+- [ ] `events` table (audit trail + automation base)
+- [ ] `tenant_modules` table (feature flags per commerce)
+- [ ] `tenant_profile` table (CRM upsell data)
+- [ ] REST API: `/api/tenants`, `/api/clients`, `/api/visits`, `/api/events`
+- [ ] `wallet_provider` field in `passes` table (abstraction layer)
+
+### Priority 3 — Polish
+
+- [ ] PWA (manifest.json + service worker)
+- [ ] Better QR scanner UI (visual feedback, error handling)
+- [ ] Toast system (react-hot-toast)
+- [ ] Skeleton loading states
+- [ ] Logo upload for commerce
+
+---
+
+## Tables to add
+
+```sql
+tenant_members (
+  tenant_id uuid references tenants,
+  user_id   uuid references auth.users,
+  role      text  -- 'super_admin' | 'owner' | 'manager' | 'staff'
+)
+
+events (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid references tenants,
+  type        text,  -- 'client_created' | 'pass_installed' | 'visit_recorded' | 'reward_unlocked'
+  entity_type text,
+  entity_id   uuid,
+  payload     jsonb,
+  created_at  timestamptz default now()
+)
+
+tenant_modules (
+  tenant_id uuid references tenants,
+  module    text,  -- 'loyalty' | 'giftcard' | 'wallet_card' | 'reservation' | 'ordering' | 'whatsapp' | 'crm' | 'voice_agent'
+  enabled   boolean default false,
+  config    jsonb
+)
+
+tenant_profile (
+  tenant_id        uuid references tenants,
+  has_ubereats     boolean,
+  has_whatsapp     boolean,
+  has_reservation  boolean,
+  website_url      text,
+  staff_size       int,
+  daily_customers  int
+)
+```
+
+---
+
+## Future modules (architecture-ready)
+
+- KitchenUp (kitchen display system)
+- Reservation
+- WhatsApp ordering
+- Voice AI agent
+- CRM automation
+- Analytics
+
+---
+
+*Built by 14 Level Up x Claude Code*
