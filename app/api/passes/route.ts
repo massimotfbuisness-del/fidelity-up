@@ -33,8 +33,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: data.msg || data.error || 'Erreur AddToWallet' }, { status: 400 })
   }
 
+  // AddToWallet never returns an install URL in the create response.
+  // The correct install URL is constructed from the cardId.
+  const installUrl = `${ATW_BASE}/passgenerator/${data.cardId}`
+
   return NextResponse.json({
     passId: data.cardId,
-    installUrl: data.shareableUrl,
+    installUrl,
   })
 }

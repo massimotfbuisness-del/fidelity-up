@@ -148,7 +148,7 @@ export default function PassesPage() {
       {/* Create Modal */}
       {creating && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-3xl p-6 max-w-lg mx-auto">
+          <div className="bg-white w-full rounded-t-3xl p-6 max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold text-gray-900">

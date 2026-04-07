@@ -27,6 +27,11 @@ export default function InstallPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // After successful registration
+  const [clientPhone, setClientPhone] = useState('')
+  const [clientName, setClientName] = useState('')
+  const [walletInstallUrl, setWalletInstallUrl] = useState('')
+
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
@@ -41,52 +46,38 @@ export default function InstallPage() {
   }, [passId])
 
   const register = async () => {
-    if (!phone.trim() || !name.trim() || !pass || !tenant) return
+    if (!phone.trim() || !name.trim() || !pass) return
     setSaving(true)
     setError('')
-    const supabase = createClient()
 
-    const { data: existing } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('phone', phone.trim())
-      .eq('tenant_id', tenant.id)
-      .single()
+    try {
+      const res = await fetch('/api/create-wallet-pass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pass_id: passId,
+          name: name.trim(),
+          phone: phone.trim(),
+          email: email.trim() || null,
+        }),
+      })
 
-    if (existing) {
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Une erreur est survenue')
+        return
+      }
+
+      setClientPhone(data.phone)
+      setClientName(data.name)
+      setWalletInstallUrl(data.installUrl || '')
       setStep('success')
+    } catch {
+      setError('Erreur réseau, réessayez')
+    } finally {
       setSaving(false)
-      return
     }
-
-    const { error: insertErr } = await supabase.from('clients').insert({
-      phone: phone.trim(),
-      name: name.trim(),
-      email: email.trim() || null,
-      tenant_id: tenant.id,
-      wallet_pass_id: pass.addtowallet_pass_id,
-      visits_count: 0,
-    })
-
-    if (insertErr) {
-      setError('Erreur lors de la création du profil')
-      setSaving(false)
-      return
-    }
-
-    await supabase.from('events').insert({
-      type: 'client_created',
-      tenant_id: tenant.id,
-      entity_type: 'client',
-      payload: {
-        phone: phone.trim(),
-        name: name.trim(),
-        email: email.trim() || null,
-      },
-    })
-
-    setStep('success')
-    setSaving(false)
   }
 
   /* ── Loading ── */
@@ -121,10 +112,9 @@ export default function InstallPage() {
       : `🎁 ${pass.reward_description}`
     : null
 
-  /* ── Hero header shared across install + success ── */
+  /* ── Hero ── */
   const Hero = () => (
     <div className="text-center mb-8 px-2">
-      {/* card icon with soft glow */}
       <div
         className="inline-flex items-center justify-center w-24 h-24 rounded-3xl mb-5 shadow-2xl"
         style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)' }}
@@ -134,11 +124,9 @@ export default function InstallPage() {
       <h1 className="text-3xl font-extrabold text-white tracking-tight leading-tight">
         {tenant.name}
       </h1>
-      {/* card-type badge */}
       <div className="mt-2 inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white/90 text-xs font-semibold px-3 py-1 rounded-full">
         {TYPE_LABELS[pass.type] ?? pass.type}
       </div>
-      {/* reward pill */}
       {rewardLabel && (
         <div
           className="mt-4 mx-auto max-w-xs bg-white/15 border border-white/25 rounded-2xl px-4 py-3 text-white text-sm font-medium"
@@ -150,48 +138,31 @@ export default function InstallPage() {
     </div>
   )
 
-  /* ════════════════════════════════════════
-     STEP: install
-  ════════════════════════════════════════ */
+  const gradientBg = `linear-gradient(160deg, ${brandBg} 0%, ${brandBg}cc 100%)`
+  const glare = (
+    <div
+      className="absolute top-0 left-0 right-0 h-64 pointer-events-none"
+      style={{ background: 'radial-gradient(ellipse at 50% -20%, rgba(255,255,255,0.18) 0%, transparent 70%)' }}
+      aria-hidden
+    />
+  )
+
+  /* ════ STEP: install ════ */
   if (step === 'install') {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center p-6"
-        style={{ background: `linear-gradient(160deg, ${brandBg} 0%, ${brandBg}cc 100%)` }}
-      >
-        {/* subtle top glare */}
-        <div
-          className="absolute top-0 left-0 right-0 h-64 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 50% -20%, rgba(255,255,255,0.18) 0%, transparent 70%)' }}
-          aria-hidden
-        />
-
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 relative" style={{ background: gradientBg }}>
+        {glare}
         <div className="w-full max-w-sm relative">
           <Hero />
-
           <div className="space-y-3">
-            {/* Primary CTA */}
-            {pass.install_url && (
-              <a
-                href={pass.install_url}
-                className="w-full flex items-center justify-center gap-3 bg-white py-5 rounded-2xl font-bold text-lg shadow-2xl active:scale-95 transition-transform duration-150"
-                style={{ color: brandBg }}
-              >
-                <span className="text-2xl">📱</span>
-                Ajouter à mon Wallet
-              </a>
-            )}
-
-            {/* Secondary CTA */}
             <button
               onClick={() => setStep('register')}
-              className="w-full flex items-center justify-center gap-3 border-2 border-white/30 text-white py-4 rounded-2xl font-semibold text-base active:scale-95 transition-transform duration-150"
-              style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(4px)' }}
+              className="w-full flex items-center justify-center gap-3 bg-white py-5 rounded-2xl font-bold text-lg shadow-2xl active:scale-95 transition-transform duration-150"
+              style={{ color: brandBg }}
             >
-              <span className="text-xl">👤</span>
-              Créer mon profil fidélité
+              <span className="text-2xl">🎉</span>
+              Rejoindre le programme
             </button>
-
             <p className="text-center text-white/40 text-xs pt-1 tracking-wide">
               Sans app · Apple &amp; Google Wallet
             </p>
@@ -201,23 +172,16 @@ export default function InstallPage() {
     )
   }
 
-  /* ════════════════════════════════════════
-     STEP: register
-  ════════════════════════════════════════ */
+  /* ════ STEP: register ════ */
   if (step === 'register') {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center p-6"
-        style={{ background: `linear-gradient(160deg, ${brandBg} 0%, ${brandBg}cc 100%)` }}
-      >
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 relative" style={{ background: gradientBg }}>
         <div
           className="absolute top-0 left-0 right-0 h-64 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at 50% -20%, rgba(255,255,255,0.15) 0%, transparent 70%)' }}
           aria-hidden
         />
-
         <div className="w-full max-w-sm relative">
-          {/* Mini branding */}
           <div className="text-center mb-5">
             <span className="text-4xl">💳</span>
             <p className="text-white/80 font-semibold mt-1 text-sm">{tenant.name}</p>
@@ -227,11 +191,10 @@ export default function InstallPage() {
             <div>
               <h2 className="text-xl font-extrabold text-gray-900">Mon profil fidélité</h2>
               <p className="text-gray-400 text-sm mt-1">
-                Accumulez vos points et recevez vos récompenses
+                Recevez votre carte Wallet personnelle
               </p>
             </div>
 
-            {/* Prénom * */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                 Prénom <span className="text-red-400">*</span>
@@ -247,7 +210,6 @@ export default function InstallPage() {
               />
             </div>
 
-            {/* Téléphone * */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                 Téléphone <span className="text-red-400">*</span>
@@ -262,7 +224,6 @@ export default function InstallPage() {
               />
             </div>
 
-            {/* Email (optionnel) */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                 Email <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
@@ -293,7 +254,7 @@ export default function InstallPage() {
               {saving ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  Création…
+                  Création de votre carte…
                 </span>
               ) : (
                 '🎉 Rejoindre le programme'
@@ -312,14 +273,9 @@ export default function InstallPage() {
     )
   }
 
-  /* ════════════════════════════════════════
-     STEP: success
-  ════════════════════════════════════════ */
+  /* ════ STEP: success ════ */
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center p-6"
-      style={{ background: `linear-gradient(160deg, ${brandBg} 0%, ${brandBg}cc 100%)` }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative" style={{ background: gradientBg }}>
       <div
         className="absolute top-0 left-0 right-0 h-64 pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at 50% -20%, rgba(255,255,255,0.15) 0%, transparent 70%)' }}
@@ -327,24 +283,21 @@ export default function InstallPage() {
       />
 
       <div className="w-full max-w-sm relative">
-        {/* Mini brand */}
         <div className="text-center mb-5">
           <p className="text-white/70 text-sm font-medium">{tenant.name}</p>
         </div>
 
         <div className="bg-white rounded-3xl p-7 shadow-2xl text-center space-y-5">
-          {/* Welcome */}
           <div>
             <div className="text-5xl mb-3">🎉</div>
             <h2 className="text-2xl font-extrabold text-gray-900 leading-tight">
-              Bienvenue {name ? name : ''}!
+              Bienvenue {clientName}!
             </h2>
             <p className="text-gray-400 text-sm mt-1">
-              Votre profil fidélité est activé
+              Votre carte fidélité est prête
             </p>
           </div>
 
-          {/* Reward box */}
           {rewardLabel && (
             <div
               className="rounded-2xl px-4 py-4 text-sm font-medium text-left"
@@ -355,32 +308,32 @@ export default function InstallPage() {
             </div>
           )}
 
-          {/* QR code */}
-          <div className="border-t border-gray-100 pt-5">
-            <p className="text-xs text-gray-400 mb-4 leading-relaxed">
-              Montrez ce QR au commerçant à chaque visite
-            </p>
-            <div className="flex justify-center">
-              <div
-                className="p-4 rounded-2xl shadow-md border border-gray-100"
-                style={{ background: '#fff' }}
-              >
-                <QRCodeSVG value={phone} size={180} level="M" includeMargin />
-              </div>
-            </div>
-            <p className="text-xs text-gray-300 mt-3 font-mono">{phone}</p>
-          </div>
-
-          {/* Wallet CTA */}
-          {pass.install_url && (
+          {/* Wallet CTA — primary action */}
+          {walletInstallUrl && (
             <a
-              href={pass.install_url}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-white text-base active:scale-95 transition-transform shadow-lg"
+              href={walletInstallUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl font-bold text-white text-lg active:scale-95 transition-transform shadow-xl"
               style={{ background: brandBg }}
             >
-              📱 Installer la carte Wallet
+              <span className="text-2xl">📱</span>
+              Ajouter à mon Wallet
             </a>
           )}
+
+          {/* Personal QR for merchant scan */}
+          <div className="border-t border-gray-100 pt-5">
+            <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+              Ou montrez ce QR au commerçant à chaque visite
+            </p>
+            <div className="flex justify-center">
+              <div className="p-4 rounded-2xl shadow-md border border-gray-100 bg-white">
+                <QRCodeSVG value={clientPhone} size={180} level="M" includeMargin />
+              </div>
+            </div>
+            <p className="text-xs text-gray-300 mt-3 font-mono">{clientPhone}</p>
+          </div>
         </div>
       </div>
     </div>
