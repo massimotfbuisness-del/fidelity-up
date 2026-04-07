@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@keyframes scan {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(200px); }
+}
+
+:root {
+  --brand: #6366f1;
+  --brand-dark: #4f46e5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #f9fafb;
+  color: #111827;
+  -webkit-tap-highlight-color: transparent;
+}
