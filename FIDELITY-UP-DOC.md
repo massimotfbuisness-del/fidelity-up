@@ -347,6 +347,164 @@ git push origin master
 
 ---
 
+## Identité visuelle — 14 Level Up
+
+> Charte graphique V1.0 — 2026. Document confidentiel.
+> Fidelity Up est un produit de 14 Level Up. Toute interface destinée aux agents, commerçants ou communications commerciales doit respecter cette charte.
+
+---
+
+### Logo
+
+**Construction :** `14 | LEVEL UP`
+- `14` — grand chiffre, Raleway ultra-light (100)
+- `|` — séparateur vertical fin
+- `LEVEL` — Raleway Bold, uppercase, tracking serré
+- `UP` — même taille que LEVEL, couleur **Ambre #B08050**
+
+**Versions autorisées :**
+
+| Version | Usage | Fond |
+|---|---|---|
+| Principale fond clair | Communication, web | #F4F2EF (Ivoire) |
+| Principale fond sombre | Presentations, slides | #1C1A17 (Encre) |
+| Monochrome | Impression, fax | Noir sur blanc |
+| Icône / Favicon | App mobile, onglet | Carré arrondi Encre ou Ambre |
+
+**Zone de protection :** espace vide = hauteur du `1` dans le logo (valeur `x`) de chaque côté. Aucun élément ne peut empiéter.
+
+**Règles absolues :**
+- Ne pas déformer / étirer
+- Ne pas recolorer (autre que versions officielles)
+- Ne pas ajouter d'ombre portée
+- Ne pas placer sur un fond dégradé
+- Ne pas placer sur un motif ou texture
+- Ne pas faire pivoter
+
+---
+
+### Palette chromatique
+
+| Nom | Hex | Usage sémantique |
+|---|---|---|
+| **Ivoire** | `#F4F2EF` | Fond principal clair — Clarté, Élégance |
+| **Encre** | `#1C1A17` | Fond sombre — Autorité, Profondeur |
+| **Ambre** | `#B08050` | Accent, CTA, liens — Énergie, Action |
+| **Sable** | `#C8B89A` | Secondaire, sous-titres, pictos |
+| **Pierre** | `#7A7670` | Texte secondaire, captions |
+
+**Règle d'utilisation :**
+- Fond Encre = pages d'autorité, headers, cartes sombres
+- Fond Ivoire = pages courantes, documents, contenu principal
+- Ambre = **uniquement** pour les CTA, accents, et la partie `UP` du logo
+- Pierre = textes secondaires, labels discrets
+
+---
+
+### Typographie
+
+Toutes les polices sont **Raleway** (Google Fonts) sauf les captions qui utilisent **DM Mono**.
+
+| Rôle | Police | Poids | Taille | Tracking | Autre |
+|---|---|---|---|---|---|
+| Display | Raleway | 100 | 64px | −3% | Titres héros |
+| Titre | Raleway | 200 | 36px | −1% | H1, H2 |
+| Label | Raleway | 800 | 13px | +35% | Uppercase, catégories |
+| Corps | Raleway | 300 | 14px | — | line-height 1.8 |
+| Accent | Raleway | 200 | 13px | +45% | Uppercase, taglines |
+| Caption | DM Mono | 300 | 10px | +20% | Références, métadonnées |
+
+**Import Google Fonts :**
+```css
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;300;800&family=DM+Mono:wght@300&display=swap');
+```
+
+---
+
+### Composants UI (référence design system)
+
+**Boutons CTA (primaire) :**
+- Fond : `#B08050` (Ambre)
+- Texte : blanc, Raleway 800, uppercase, tracking +35%
+- Pas de border-radius arrondi — angle droit ou très légèrement arrondi (2–4px)
+- Exemple : `COMMENCER →`
+
+**Boutons secondaires :**
+- Outline : border `#1C1A17` ou `#B08050` selon le fond
+- Texte : Raleway 700, uppercase
+- Exemple : `EN SAVOIR PLUS`
+
+**Tags / Étiquettes :**
+- Fond Encre ou outline léger
+- Texte Raleway 800 uppercase, petite taille
+- Exemple : `FORMATION` `NOUVEAU` `COACHING`
+
+**Champs de saisie :**
+- Style underline (pas de border box)
+- Label : Raleway uppercase, Pierre `#7A7670`, tracking +20%
+- Valeur : Raleway 300, Encre `#1C1A17`
+
+**Barres de progression :**
+- Ligne fine, couleur Ambre `#B08050`
+- Label uppercase, Raleway 800
+
+---
+
+### Motifs & textures (usage fonds)
+
+Utilisables en arrière-plan uniquement, **jamais au premier plan, jamais sur le logo**.
+
+| Motif | Fond | Usage |
+|---|---|---|
+| Diagonales | Sombre (Encre) | Slides, covers |
+| Pointillé | Clair (Ivoire) | Documents légers |
+| Lignes | Sombre (Encre) | Headers, sections |
+| Grille | Clair (Ivoire) | Fonds neutres |
+| Concentrique | Sombre (Encre) | Visuels hero |
+| Croisillon | Ambre | Accents, highlights |
+
+---
+
+### Valeurs de marque
+
+**Tagline principale :** `ÉLÉVATION · MÉTHODE · EXCELLENCE`
+
+**Phrase signature :** *"Progresser avec méthode et ambition."*
+
+**Ton éditorial :**
+- Direct, sobre, sans excès
+- Phrases courtes, percutantes
+- Uppercase pour les concepts clés
+- Jamais familier, jamais agressif
+
+**Exemples de formulations correctes :**
+- "La progression est une décision quotidienne."
+- "Chaque niveau franchit ouvre le suivant."
+- "L'excellence est un choix."
+- "Montez en compétence."
+
+---
+
+### Application dans Fidelity Up
+
+Fidelity Up est le **produit phare** vendu par les agents 14 Level Up. L'interface doit refléter le positionnement premium de la marque mère.
+
+**Recommandations concrètes pour l'UI :**
+
+| Élément | Application recommandée |
+|---|---|
+| Fond app (board) | Ivoire `#F4F2EF` ou blanc cassé |
+| Header / navbar | Encre `#1C1A17` ou couleur du tenant |
+| Boutons primaires | Ambre `#B08050` avec texte blanc uppercase |
+| Textes secondaires | Pierre `#7A7670` |
+| Badges, tags | Encre `#1C1A17` texte blanc |
+| Progress bars fidélité | Ambre `#B08050` |
+| Police système | Raleway (à intégrer) ou équivalent système |
+
+> Actuellement l'app utilise Indigo `#6366f1` comme couleur par défaut des tenants. Ce n'est pas la palette 14 Level Up. La couleur du tenant est personnalisable par le commerçant — la charte 14 Level Up s'applique aux éléments de la plateforme elle-même (admin, super admin, pages de marque).
+
+---
+
 ## Points d'attention / pièges connus
 
 1. **`NEXT_PUBLIC_APP_URL` sur Vercel** : doit être défini sinon les QR codes pointent vers localhost
