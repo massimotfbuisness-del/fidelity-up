@@ -3,10 +3,13 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase'
 import type { Client, Tenant, Pass } from '@/lib/types'
 
 const QrScannerModal = dynamic(() => import('@/components/QrScannerModal'), { ssr: false })
+
+const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
 function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = Math.min(100, Math.round((value / max) * 100))
@@ -57,6 +60,7 @@ export default function BoardPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [threshold, setThreshold] = useState(10)
   const [loading, setLoading] = useState(true)
+  const [loyaltyPass, setLoyaltyPass] = useState<Pass | null>(null)
 
   const [visitModal, setVisitModal] = useState(false)
   const [visitPhone, setVisitPhone] = useState('')
@@ -79,8 +83,11 @@ export default function BoardPage() {
     if (!t) { router.push('/merchants'); return }
     setTenant(t)
 
-    const { data: pass } = await supabase.from('passes').select('reward_threshold').eq('tenant_id', t.id).eq('type', 'fidelite').order('created_at').limit(1).single()
-    if (pass) setThreshold(pass.reward_threshold)
+    const { data: pass } = await supabase.from('passes').select('*').eq('tenant_id', t.id).eq('type', 'fidelite').order('created_at').limit(1).single()
+    if (pass) {
+      setThreshold(pass.reward_threshold)
+      setLoyaltyPass(pass)
+    }
 
     const { data: cls } = await supabase.from('clients').select('*').eq('tenant_id', t.id).order('last_visit', { ascending: false, nullsFirst: false })
     setClients(cls || [])
@@ -148,6 +155,12 @@ export default function BoardPage() {
   const dormant = clients.filter(c => !c.last_visit || (now - new Date(c.last_visit).getTime()) >= 21 * 86400000)
   const rewards = clients.filter(c => c.visits_count >= threshold)
 
+  const brandColor = tenant?.primary_color || '#6366f1'
+
+  const installUrl = loyaltyPass
+    ? `${appUrl}/install/${loyaltyPass.id}`
+    : ''
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-indigo-600">
       <div className="text-white text-xl font-bold animate-pulse">Fidelity Up</div>
@@ -155,66 +168,98 @@ export default function BoardPage() {
   )
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div style={{ background: tenant?.primary_color || '#6366f1' }} className="px-4 pt-10 pb-4 sticky top-0 z-40">
+      <div style={{ background: brandColor }} className="px-4 pt-10 pb-5 sticky top-0 z-40">
         <div className="max-w-lg mx-auto">
           <button onClick={() => router.push('/merchants')} className="text-white/60 text-sm flex items-center gap-1 mb-2">
             ‹ Commerces
           </button>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h1 className="text-xl font-bold text-white leading-tight">{tenant?.name}</h1>
-              <p className="text-white/60 text-xs">{clients.length} clients · {active.length} actifs · {rewards.length} récompenses</p>
-            </div>
-            <Link href="/board/passes" className="bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-xl">
-              ⚡ Cartes
-            </Link>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => setScannerOpen(true)}
-              className="bg-white/20 text-white rounded-2xl py-3.5 px-4 font-bold text-base active:scale-95 transition-all flex items-center gap-2"
-            >
-              📷
-            </button>
-            <button
-              onClick={() => setVisitModal(true)}
-              className="flex-1 bg-white rounded-2xl py-3.5 flex items-center justify-center gap-2 font-bold text-base active:scale-95 transition-all"
-              style={{ color: tenant?.primary_color || '#6366f1' }}
-            >
-              <span className="text-xl">+</span> Enregistrer une visite
-            </button>
-          </div>
+          <h1 className="text-xl font-bold text-white leading-tight">{tenant?.name}</h1>
         </div>
       </div>
 
-      {/* Toast */}
-      {visitMsg && (
-        <div className="mx-4 mt-3 bg-green-500 text-white px-4 py-3 rounded-2xl text-sm font-semibold shadow-lg max-w-lg mx-auto">
-          {visitMsg}
-        </div>
-      )}
+      {/* Main scrollable content */}
+      <div className="px-4 py-5 max-w-lg mx-auto space-y-4">
 
-      {/* Board */}
-      <div className="px-4 py-4 max-w-lg mx-auto space-y-5">
-        {clients.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-5xl mb-3">👥</div>
-            <h3 className="font-bold text-gray-900 mb-1">Aucun client encore</h3>
-            <p className="text-gray-500 text-sm">Enregistrez une visite ou créez une carte Wallet</p>
-            <div className="flex gap-3 justify-center mt-4">
-              <button onClick={() => setVisitModal(true)} className="px-5 py-3 rounded-xl font-semibold text-white text-sm" style={{ background: tenant?.primary_color }}>
-                + Visite
-              </button>
-              <Link href="/board/passes" className="px-5 py-3 rounded-xl font-semibold text-sm bg-white border-2 border-gray-200 text-gray-700">
-                ⚡ Créer carte
-              </Link>
-            </div>
+        {/* Toast */}
+        {visitMsg && (
+          <div className="bg-green-500 text-white px-4 py-3 rounded-2xl text-sm font-semibold shadow-lg">
+            {visitMsg}
           </div>
         )}
 
+        {/* Install QR Card */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 flex flex-col items-center">
+          {loyaltyPass ? (
+            <>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+                Faites scanner ce QR par vos clients
+              </p>
+              <div className="p-3 bg-white rounded-2xl shadow-inner border border-gray-100">
+                <QRCodeSVG value={installUrl} size={200} />
+              </div>
+              <p className="text-xs text-gray-400 mt-3 text-center break-all">{installUrl}</p>
+            </>
+          ) : (
+            <div className="flex flex-col items-center py-4">
+              <div className="text-4xl mb-3">🎴</div>
+              <p className="text-gray-500 text-sm text-center mb-4">Aucune carte de fidélité créée.<br />Créez-en une pour générer votre QR code.</p>
+              <Link
+                href="/board/passes"
+                className="px-6 py-3 rounded-2xl font-bold text-white text-sm active:scale-95 transition-all"
+                style={{ background: brandColor }}
+              >
+                ⚡ Créer une carte
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setScannerOpen(true)}
+            className="flex-1 py-4 rounded-2xl font-bold text-base active:scale-95 transition-all border-2 flex items-center justify-center gap-2"
+            style={{ background: 'white', color: brandColor, borderColor: brandColor }}
+          >
+            📷 Scanner client
+          </button>
+          <button
+            onClick={() => setVisitModal(true)}
+            className="flex-1 py-4 rounded-2xl font-bold text-base text-white active:scale-95 transition-all flex items-center justify-center gap-2"
+            style={{ background: brandColor }}
+          >
+            + Enregistrer visite
+          </button>
+        </div>
+
+        {/* Stats Pills */}
+        <div className="flex gap-2 justify-center">
+          <div className="bg-white rounded-full px-4 py-2 shadow-sm text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" />
+            {clients.length} clients
+          </div>
+          <div className="bg-white rounded-full px-4 py-2 shadow-sm text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+            {active.length} actifs
+          </div>
+          <div className="bg-white rounded-full px-4 py-2 shadow-sm text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+            <span className="text-yellow-500">🎁</span>
+            {rewards.length} récompenses
+          </div>
+        </div>
+
+        {/* Empty state */}
+        {clients.length === 0 && (
+          <div className="text-center py-10">
+            <div className="text-5xl mb-3">👥</div>
+            <h3 className="font-bold text-gray-900 mb-1">Aucun client encore</h3>
+            <p className="text-gray-500 text-sm">Enregistrez une visite ou créez une carte Wallet</p>
+          </div>
+        )}
+
+        {/* Client sections */}
         {rewards.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-2">
@@ -222,7 +267,7 @@ export default function BoardPage() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               {rewards.map(c => (
-                <ClientCard key={c.id} client={c} threshold={threshold} color={tenant?.primary_color || '#6366f1'} onClick={() => setSelectedClient(c)} />
+                <ClientCard key={c.id} client={c} threshold={threshold} color={brandColor} onClick={() => setSelectedClient(c)} />
               ))}
             </div>
           </section>
@@ -236,7 +281,7 @@ export default function BoardPage() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               {active.filter(c => c.visits_count < threshold).map(c => (
-                <ClientCard key={c.id} client={c} threshold={threshold} color={tenant?.primary_color || '#6366f1'} onClick={() => setSelectedClient(c)} />
+                <ClientCard key={c.id} client={c} threshold={threshold} color={brandColor} onClick={() => setSelectedClient(c)} />
               ))}
             </div>
           </section>
@@ -250,7 +295,7 @@ export default function BoardPage() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               {dormant.map(c => (
-                <ClientCard key={c.id} client={c} threshold={threshold} color={tenant?.primary_color || '#6366f1'} onClick={() => setSelectedClient(c)} />
+                <ClientCard key={c.id} client={c} threshold={threshold} color={brandColor} onClick={() => setSelectedClient(c)} />
               ))}
             </div>
           </section>
@@ -284,7 +329,7 @@ export default function BoardPage() {
                 onClick={() => recordVisit()}
                 disabled={visitLoading || !visitPhone.trim()}
                 className="w-full py-4 rounded-2xl font-bold text-white text-lg disabled:opacity-40 active:scale-95 transition-all"
-                style={{ background: tenant?.primary_color || '#6366f1' }}
+                style={{ background: brandColor }}
               >
                 {visitLoading ? 'Enregistrement...' : '✅ Confirmer la visite'}
               </button>
@@ -298,7 +343,7 @@ export default function BoardPage() {
         <QrScannerModal
           onResult={handleScanResult}
           onClose={() => setScannerOpen(false)}
-          color={tenant?.primary_color || '#6366f1'}
+          color={brandColor}
         />
       )}
 
@@ -308,7 +353,7 @@ export default function BoardPage() {
           <div className="bg-white w-full rounded-t-3xl p-6 max-w-lg mx-auto" onClick={e => e.stopPropagation()}>
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
             <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold text-white" style={{ background: tenant?.primary_color }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold text-white" style={{ background: brandColor }}>
                 {(selectedClient.name || selectedClient.phone).charAt(0).toUpperCase()}
               </div>
               <div>
@@ -339,7 +384,7 @@ export default function BoardPage() {
                 <span>Progression fidélité</span>
                 <span className="font-semibold">{selectedClient.visits_count % threshold} / {threshold}</span>
               </div>
-              <ProgressBar value={selectedClient.visits_count % threshold} max={threshold} color={tenant?.primary_color || '#6366f1'} />
+              <ProgressBar value={selectedClient.visits_count % threshold} max={threshold} color={brandColor} />
             </div>
 
             {visitMsg && <div className="bg-green-50 text-green-700 px-4 py-2 rounded-xl mb-3 text-sm font-medium">{visitMsg}</div>}
@@ -348,7 +393,7 @@ export default function BoardPage() {
               onClick={() => recordVisit(selectedClient)}
               disabled={visitLoading}
               className="w-full py-4 rounded-2xl font-bold text-white text-lg disabled:opacity-40 active:scale-95 transition-all"
-              style={{ background: tenant?.primary_color || '#6366f1' }}
+              style={{ background: brandColor }}
             >
               {visitLoading ? '...' : '+ Enregistrer une visite'}
             </button>

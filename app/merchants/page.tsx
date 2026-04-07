@@ -18,6 +18,7 @@ export default function MerchantsPage() {
   const [tenants, setTenants] = useState<TenantCard[]>([])
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState('')
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -25,6 +26,7 @@ export default function MerchantsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setEmail(user.email || '')
+      if (user.email === 'info@14level-up.ch') setIsSuperAdmin(true)
 
       const { data: ts } = await supabase.from('tenants').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
       if (!ts || ts.length === 0) { setLoading(false); return }
@@ -66,9 +68,16 @@ export default function MerchantsPage() {
             <h1 className="text-2xl font-bold text-white">💳 Fidelity Up</h1>
             <p className="text-indigo-200 text-sm">{email}</p>
           </div>
-          <button onClick={logout} className="text-indigo-200 text-sm border border-indigo-400 rounded-xl px-3 py-1.5">
-            Déco
-          </button>
+          <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <Link href="/admin" className="text-yellow-300 text-sm border border-yellow-400/50 rounded-xl px-3 py-1.5 font-semibold">
+                🔑 Admin
+              </Link>
+            )}
+            <button onClick={logout} className="text-indigo-200 text-sm border border-indigo-400 rounded-xl px-3 py-1.5">
+              Déco
+            </button>
+          </div>
         </div>
       </div>
 
