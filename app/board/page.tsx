@@ -11,14 +11,30 @@ const QrScannerModal = dynamic(() => import('@/components/QrScannerModal'), { ss
 
 const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
+const LU: Record<string, React.CSSProperties> = {
+  label: {
+    fontFamily: 'Raleway, sans-serif',
+    fontWeight: 800,
+    fontSize: '10px',
+    letterSpacing: '0.25em',
+    textTransform: 'uppercase',
+    color: '#7A7670',
+  },
+  value: {
+    fontFamily: 'Raleway, sans-serif',
+    fontWeight: 100,
+    fontSize: '28px',
+    color: '#1C1A17',
+    letterSpacing: '-0.02em',
+    lineHeight: 1,
+  },
+}
+
 function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = Math.min(100, Math.round((value / max) * 100))
   return (
-    <div className="w-full bg-gray-100 rounded-full h-2 mt-1">
-      <div
-        className="h-2 rounded-full transition-all"
-        style={{ width: `${pct}%`, background: color }}
-      />
+    <div style={{ width: '100%', height: '2px', background: '#C8B89A', marginTop: '6px' }}>
+      <div style={{ width: `${pct}%`, height: '100%', background: color, transition: 'width 0.3s' }} />
     </div>
   )
 }
@@ -33,23 +49,53 @@ function ClientCard({ client, threshold, color, onClick }: { client: Client; thr
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left bg-white rounded-2xl p-4 shadow-sm border-2 active:scale-95 transition-all ${hasReward ? 'border-yellow-400' : dormant ? 'border-red-100' : 'border-gray-100'}`}
+      style={{
+        width: '100%',
+        textAlign: 'left',
+        background: '#fff',
+        border: hasReward ? '1px solid #B08050' : dormant ? '1px solid #e8d5d5' : '1px solid #C8B89A',
+        padding: '14px',
+        cursor: 'pointer',
+        transition: 'border-color 0.15s',
+      }}
     >
-      <div className="flex items-start justify-between mb-2">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
         <div>
-          <div className="font-bold text-gray-900 text-base leading-tight">{client.name || client.phone}</div>
-          {client.name && <div className="text-xs text-gray-400">{client.phone}</div>}
+          <div style={{
+            fontFamily: 'Raleway, sans-serif',
+            fontWeight: 700,
+            fontSize: '14px',
+            color: '#1C1A17',
+            lineHeight: 1.2,
+          }}>{client.name || client.phone}</div>
+          {client.name && (
+            <div style={{
+              fontFamily: 'DM Mono, monospace',
+              fontWeight: 300,
+              fontSize: '10px',
+              color: '#7A7670',
+              marginTop: '2px',
+            }}>{client.phone}</div>
+          )}
         </div>
-        <div className="flex flex-col items-end gap-1">
-          {hasReward && <span className="text-base">🎁</span>}
-          <div className={`w-2.5 h-2.5 rounded-full ${dormant ? 'bg-red-400' : 'bg-green-400'}`} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          {hasReward && <span style={{ fontSize: '14px' }}>🎁</span>}
+          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: dormant ? '#e07070' : '#70c070' }} />
         </div>
       </div>
-      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-        <span>{client.visits_count} / {threshold} visites</span>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontFamily: 'DM Mono, monospace',
+        fontWeight: 300,
+        fontSize: '10px',
+        color: '#7A7670',
+        marginBottom: '2px',
+      }}>
+        <span>{client.visits_count}/{threshold} visites</span>
         <span>{lastVisitStr}</span>
       </div>
-      <ProgressBar value={client.visits_count} max={threshold} color={hasReward ? '#f59e0b' : color} />
+      <ProgressBar value={client.visits_count} max={threshold} color={hasReward ? '#B08050' : color} />
     </button>
   )
 }
@@ -128,8 +174,6 @@ export default function BoardPage() {
   const handleScanResult = async (scannedPhone: string) => {
     setScannerOpen(false)
     if (!scannedPhone.trim()) return
-    setVisitPhone(scannedPhone.trim())
-    // Auto-record the visit
     if (!tenant) return
     setVisitLoading(true)
     const supabase = createClient()
@@ -155,117 +199,253 @@ export default function BoardPage() {
   const dormant = clients.filter(c => !c.last_visit || (now - new Date(c.last_visit).getTime()) >= 21 * 86400000)
   const rewards = clients.filter(c => c.visits_count >= threshold)
 
-  const brandColor = tenant?.primary_color || '#6366f1'
+  const brandColor = tenant?.primary_color || '#B08050'
 
-  const installUrl = loyaltyPass
-    ? `${appUrl}/install/${loyaltyPass.id}`
-    : ''
+  const installUrl = loyaltyPass ? `${appUrl}/install/${loyaltyPass.id}` : ''
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-indigo-600">
-      <div className="text-white text-xl font-bold animate-pulse">Fidelity Up</div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1C1A17' }}>
+      <div style={{
+        fontFamily: 'Raleway, sans-serif',
+        fontWeight: 100,
+        fontSize: '32px',
+        color: '#F4F2EF',
+        letterSpacing: '-0.02em',
+      }}>14 <span style={{ color: '#B08050' }}>Level Up</span></div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', background: '#F4F2EF' }}>
       {/* Header */}
-      <div style={{ background: brandColor }} className="px-4 pt-10 pb-5 sticky top-0 z-40">
-        <div className="max-w-lg mx-auto">
-          <button onClick={() => router.push('/merchants')} className="text-white/60 text-sm flex items-center gap-1 mb-2">
+      <div style={{ background: '#1C1A17', padding: '40px 20px 24px', position: 'sticky', top: 0, zIndex: 40 }}>
+        <div style={{ maxWidth: '512px', margin: '0 auto' }}>
+          <button
+            onClick={() => router.push('/merchants')}
+            style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 300,
+              fontSize: '11px',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: '#7A7670',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              marginBottom: '12px',
+              padding: 0,
+            }}
+          >
             ‹ Commerces
           </button>
-          <h1 className="text-xl font-bold text-white leading-tight">{tenant?.name}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 800,
+                fontSize: '18px',
+                color: '#F4F2EF',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+              }}>{tenant?.name}</div>
+              <div style={{
+                fontFamily: 'DM Mono, monospace',
+                fontWeight: 300,
+                fontSize: '10px',
+                color: '#7A7670',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                marginTop: '4px',
+              }}>{tenant?.type}</div>
+            </div>
+            <Link
+              href="/board/passes"
+              style={{
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 800,
+                fontSize: '10px',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: '#B08050',
+                border: '1px solid #B08050',
+                padding: '6px 12px',
+                textDecoration: 'none',
+              }}
+            >
+              CARTES
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Main scrollable content */}
-      <div className="px-4 py-5 max-w-lg mx-auto space-y-4">
+      {/* Content */}
+      <div style={{ maxWidth: '512px', margin: '0 auto', padding: '24px 20px' }}>
 
         {/* Toast */}
         {visitMsg && (
-          <div className="bg-green-500 text-white px-4 py-3 rounded-2xl text-sm font-semibold shadow-lg">
+          <div style={{
+            background: '#1C1A17',
+            color: '#F4F2EF',
+            padding: '12px 16px',
+            fontFamily: 'Raleway, sans-serif',
+            fontWeight: 300,
+            fontSize: '13px',
+            marginBottom: '16px',
+            borderLeft: '3px solid #B08050',
+          }}>
             {visitMsg}
           </div>
         )}
 
-        {/* Install QR Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-6 flex flex-col items-center">
+        {/* QR Card */}
+        <div style={{
+          background: '#fff',
+          border: '1px solid #C8B89A',
+          padding: '24px',
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}>
           {loyaltyPass ? (
             <>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
-                Faites scanner ce QR par vos clients
-              </p>
-              <div className="p-3 bg-white rounded-2xl shadow-inner border border-gray-100">
-                <QRCodeSVG value={installUrl} size={200} />
+              <p style={{ ...LU.label, marginBottom: '20px' }}>Faites scanner ce QR par vos clients</p>
+              <div style={{ padding: '12px', background: '#F4F2EF', border: '1px solid #C8B89A' }}>
+                <QRCodeSVG value={installUrl} size={180} />
               </div>
-              <p className="text-xs text-gray-400 mt-3 text-center break-all">{installUrl}</p>
+              <p style={{
+                fontFamily: 'DM Mono, monospace',
+                fontWeight: 300,
+                fontSize: '9px',
+                color: '#7A7670',
+                letterSpacing: '0.05em',
+                marginTop: '12px',
+                textAlign: 'center',
+                wordBreak: 'break-all',
+              }}>{installUrl}</p>
             </>
           ) : (
-            <div className="flex flex-col items-center py-4">
-              <div className="text-4xl mb-3">🎴</div>
-              <p className="text-gray-500 text-sm text-center mb-4">Aucune carte de fidélité créée.<br />Créez-en une pour générer votre QR code.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 0' }}>
+              <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎴</div>
+              <p style={{
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 300,
+                fontSize: '13px',
+                color: '#7A7670',
+                textAlign: 'center',
+                marginBottom: '16px',
+              }}>Aucune carte de fidélité créée.<br />Créez-en une pour générer votre QR code.</p>
               <Link
                 href="/board/passes"
-                className="px-6 py-3 rounded-2xl font-bold text-white text-sm active:scale-95 transition-all"
-                style={{ background: brandColor }}
+                style={{
+                  background: '#B08050',
+                  color: '#F4F2EF',
+                  padding: '12px 24px',
+                  textDecoration: 'none',
+                  fontFamily: 'Raleway, sans-serif',
+                  fontWeight: 800,
+                  fontSize: '11px',
+                  letterSpacing: '0.25em',
+                  textTransform: 'uppercase',
+                }}
               >
-                ⚡ Créer une carte
+                CRÉER UNE CARTE →
               </Link>
             </div>
           )}
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
           <button
             onClick={() => setScannerOpen(true)}
-            className="flex-1 py-4 rounded-2xl font-bold text-base active:scale-95 transition-all border-2 flex items-center justify-center gap-2"
-            style={{ background: 'white', color: brandColor, borderColor: brandColor }}
+            style={{
+              flex: 1,
+              padding: '16px',
+              background: '#fff',
+              border: '1px solid #C8B89A',
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 800,
+              fontSize: '11px',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: '#1C1A17',
+              cursor: 'pointer',
+            }}
           >
-            📷 Scanner client
+            📷 Scanner
           </button>
           <button
             onClick={() => setVisitModal(true)}
-            className="flex-1 py-4 rounded-2xl font-bold text-base text-white active:scale-95 transition-all flex items-center justify-center gap-2"
-            style={{ background: brandColor }}
+            style={{
+              flex: 1,
+              padding: '16px',
+              background: '#B08050',
+              border: 'none',
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 800,
+              fontSize: '11px',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: '#F4F2EF',
+              cursor: 'pointer',
+            }}
           >
-            + Enregistrer visite
+            + VISITE
           </button>
         </div>
 
-        {/* Stats Pills */}
-        <div className="flex gap-2 justify-center">
-          <div className="bg-white rounded-full px-4 py-2 shadow-sm text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" />
-            {clients.length} clients
-          </div>
-          <div className="bg-white rounded-full px-4 py-2 shadow-sm text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-            {active.length} actifs
-          </div>
-          <div className="bg-white rounded-full px-4 py-2 shadow-sm text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-            <span className="text-yellow-500">🎁</span>
-            {rewards.length} récompenses
-          </div>
+        {/* Stats */}
+        <div style={{
+          display: 'flex',
+          gap: '1px',
+          background: '#C8B89A',
+          marginBottom: '24px',
+        }}>
+          {[
+            { value: clients.length, label: 'Clients' },
+            { value: active.length, label: 'Actifs' },
+            { value: rewards.length, label: 'Récomp.' },
+          ].map(({ value, label }) => (
+            <div key={label} style={{
+              flex: 1,
+              background: '#F4F2EF',
+              padding: '14px 12px',
+              textAlign: 'center',
+            }}>
+              <div style={{ ...LU.value, fontSize: '22px' }}>{value}</div>
+              <div style={{ ...LU.label, marginTop: '4px' }}>{label}</div>
+            </div>
+          ))}
         </div>
 
         {/* Empty state */}
         {clients.length === 0 && (
-          <div className="text-center py-10">
-            <div className="text-5xl mb-3">👥</div>
-            <h3 className="font-bold text-gray-900 mb-1">Aucun client encore</h3>
-            <p className="text-gray-500 text-sm">Enregistrez une visite ou créez une carte Wallet</p>
+          <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <div style={{ fontSize: '40px', marginBottom: '12px' }}>👥</div>
+            <p style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 200,
+              fontSize: '18px',
+              color: '#1C1A17',
+              marginBottom: '6px',
+            }}>Aucun client encore</p>
+            <p style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 300,
+              fontSize: '13px',
+              color: '#7A7670',
+            }}>Enregistrez une visite ou créez une carte Wallet</p>
           </div>
         )}
 
-        {/* Client sections */}
+        {/* Rewards section */}
         {rewards.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-yellow-500 font-bold text-sm">🎁 RÉCOMPENSES ({rewards.length})</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+          <section style={{ marginBottom: '24px' }}>
+            <p style={{ ...LU.label, marginBottom: '12px', color: '#B08050' }}>
+              🎁 RÉCOMPENSES ({rewards.length})
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {rewards.map(c => (
                 <ClientCard key={c.id} client={c} threshold={threshold} color={brandColor} onClick={() => setSelectedClient(c)} />
               ))}
@@ -273,13 +453,13 @@ export default function BoardPage() {
           </section>
         )}
 
+        {/* Active section */}
         {active.filter(c => c.visits_count < threshold).length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-green-400" />
-              <span className="text-green-700 font-bold text-sm">ACTIFS ({active.filter(c => c.visits_count < threshold).length})</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+          <section style={{ marginBottom: '24px' }}>
+            <p style={{ ...LU.label, marginBottom: '12px' }}>
+              ACTIFS ({active.filter(c => c.visits_count < threshold).length})
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {active.filter(c => c.visits_count < threshold).map(c => (
                 <ClientCard key={c.id} client={c} threshold={threshold} color={brandColor} onClick={() => setSelectedClient(c)} />
               ))}
@@ -287,13 +467,13 @@ export default function BoardPage() {
           </section>
         )}
 
+        {/* Dormant section */}
         {dormant.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-red-400" />
-              <span className="text-red-600 font-bold text-sm">DORMANTS — +21 jours ({dormant.length})</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+          <section style={{ marginBottom: '24px' }}>
+            <p style={{ ...LU.label, marginBottom: '12px', color: '#b07070' }}>
+              DORMANTS +21J ({dormant.length})
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {dormant.map(c => (
                 <ClientCard key={c.id} client={c} threshold={threshold} color={brandColor} onClick={() => setSelectedClient(c)} />
               ))}
@@ -304,34 +484,82 @@ export default function BoardPage() {
 
       {/* Visit Modal */}
       {visitModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end" onClick={() => setVisitModal(false)}>
-          <div className="bg-white w-full rounded-t-3xl p-6 max-w-lg mx-auto" onClick={e => e.stopPropagation()}>
-            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
-            <h2 className="text-xl font-bold text-gray-900 mb-4">+ Enregistrer une visite</h2>
-            <div className="space-y-3">
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(28,26,23,0.7)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}
+          onClick={() => setVisitModal(false)}
+        >
+          <div
+            style={{ background: '#F4F2EF', width: '100%', maxWidth: '512px', margin: '0 auto', padding: '28px 24px 32px' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ width: '32px', height: '2px', background: '#C8B89A', margin: '0 auto 20px' }} />
+            <p style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 800,
+              fontSize: '13px',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: '#1C1A17',
+              marginBottom: '20px',
+            }}>+ Enregistrer une visite</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <input
                 type="tel"
                 autoFocus
                 value={visitPhone}
                 onChange={e => setVisitPhone(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && recordVisit()}
-                placeholder="📱 Téléphone client *"
-                className="w-full border-2 border-gray-100 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:border-indigo-400"
+                placeholder="Téléphone client *"
+                style={{
+                  width: '100%',
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: '1px solid #C8B89A',
+                  padding: '10px 0',
+                  fontFamily: 'Raleway, sans-serif',
+                  fontWeight: 300,
+                  fontSize: '16px',
+                  color: '#1C1A17',
+                  outline: 'none',
+                }}
               />
               <input
                 type="text"
                 value={visitName}
                 onChange={e => setVisitName(e.target.value)}
                 placeholder="Prénom (optionnel)"
-                className="w-full border-2 border-gray-100 rounded-2xl px-4 py-3 focus:outline-none focus:border-indigo-400"
+                style={{
+                  width: '100%',
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: '1px solid #C8B89A',
+                  padding: '10px 0',
+                  fontFamily: 'Raleway, sans-serif',
+                  fontWeight: 300,
+                  fontSize: '16px',
+                  color: '#1C1A17',
+                  outline: 'none',
+                }}
               />
               <button
                 onClick={() => recordVisit()}
                 disabled={visitLoading || !visitPhone.trim()}
-                className="w-full py-4 rounded-2xl font-bold text-white text-lg disabled:opacity-40 active:scale-95 transition-all"
-                style={{ background: brandColor }}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  background: visitLoading || !visitPhone.trim() ? '#C8B89A' : '#B08050',
+                  border: 'none',
+                  fontFamily: 'Raleway, sans-serif',
+                  fontWeight: 800,
+                  fontSize: '11px',
+                  letterSpacing: '0.35em',
+                  textTransform: 'uppercase',
+                  color: '#F4F2EF',
+                  cursor: visitLoading || !visitPhone.trim() ? 'not-allowed' : 'pointer',
+                  marginTop: '8px',
+                }}
               >
-                {visitLoading ? 'Enregistrement...' : '✅ Confirmer la visite'}
+                {visitLoading ? 'ENREGISTREMENT...' : 'CONFIRMER LA VISITE →'}
               </button>
             </div>
           </div>
@@ -349,53 +577,114 @@ export default function BoardPage() {
 
       {/* Client Detail Modal */}
       {selectedClient && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end" onClick={() => setSelectedClient(null)}>
-          <div className="bg-white w-full rounded-t-3xl p-6 max-w-lg mx-auto" onClick={e => e.stopPropagation()}>
-            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold text-white" style={{ background: brandColor }}>
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(28,26,23,0.7)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}
+          onClick={() => setSelectedClient(null)}
+        >
+          <div
+            style={{ background: '#F4F2EF', width: '100%', maxWidth: '512px', margin: '0 auto', padding: '28px 24px 32px' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ width: '32px', height: '2px', background: '#C8B89A', margin: '0 auto 20px' }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                background: '#1C1A17',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 800,
+                fontSize: '20px',
+                color: '#F4F2EF',
+                flexShrink: 0,
+              }}>
                 {(selectedClient.name || selectedClient.phone).charAt(0).toUpperCase()}
               </div>
               <div>
-                <div className="font-bold text-xl text-gray-900">{selectedClient.name || selectedClient.phone}</div>
-                {selectedClient.name && <div className="text-gray-500 text-sm">{selectedClient.phone}</div>}
+                <div style={{
+                  fontFamily: 'Raleway, sans-serif',
+                  fontWeight: 700,
+                  fontSize: '18px',
+                  color: '#1C1A17',
+                }}>{selectedClient.name || selectedClient.phone}</div>
+                {selectedClient.name && (
+                  <div style={{
+                    fontFamily: 'DM Mono, monospace',
+                    fontWeight: 300,
+                    fontSize: '11px',
+                    color: '#7A7670',
+                  }}>{selectedClient.phone}</div>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-5">
-              <div className="bg-indigo-50 rounded-2xl p-3 text-center">
-                <div className="font-bold text-2xl text-indigo-700">{selectedClient.visits_count}</div>
-                <div className="text-xs text-indigo-400 mt-0.5">Visites</div>
-              </div>
-              <div className="bg-yellow-50 rounded-2xl p-3 text-center">
-                <div className="font-bold text-2xl text-yellow-600">{Math.floor(selectedClient.visits_count / threshold)}</div>
-                <div className="text-xs text-yellow-400 mt-0.5">Récompenses</div>
-              </div>
-              <div className="bg-gray-50 rounded-2xl p-3 text-center">
-                <div className="font-bold text-sm text-gray-700 mt-1">
-                  {selectedClient.last_visit ? new Date(selectedClient.last_visit).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : 'Jamais'}
+            <div style={{ display: 'flex', gap: '1px', background: '#C8B89A', marginBottom: '20px' }}>
+              {[
+                { value: selectedClient.visits_count, label: 'Visites' },
+                { value: Math.floor(selectedClient.visits_count / threshold), label: 'Récomp.' },
+                {
+                  value: selectedClient.last_visit
+                    ? new Date(selectedClient.last_visit).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+                    : 'Jamais',
+                  label: 'Dernière',
+                },
+              ].map(({ value, label }) => (
+                <div key={label} style={{ flex: 1, background: '#fff', padding: '12px', textAlign: 'center' }}>
+                  <div style={{
+                    fontFamily: 'Raleway, sans-serif',
+                    fontWeight: 100,
+                    fontSize: '20px',
+                    color: '#1C1A17',
+                    letterSpacing: '-0.02em',
+                  }}>{value}</div>
+                  <div style={{ ...LU.label, marginTop: '4px' }}>{label}</div>
                 </div>
-                <div className="text-xs text-gray-400 mt-0.5">Dernière visite</div>
-              </div>
+              ))}
             </div>
 
-            <div className="mb-5">
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
-                <span>Progression fidélité</span>
-                <span className="font-semibold">{selectedClient.visits_count % threshold} / {threshold}</span>
+            <div style={{ marginBottom: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ ...LU.label }}>Progression</span>
+                <span style={{ ...LU.label, color: '#B08050' }}>{selectedClient.visits_count % threshold} / {threshold}</span>
               </div>
               <ProgressBar value={selectedClient.visits_count % threshold} max={threshold} color={brandColor} />
             </div>
 
-            {visitMsg && <div className="bg-green-50 text-green-700 px-4 py-2 rounded-xl mb-3 text-sm font-medium">{visitMsg}</div>}
+            {visitMsg && (
+              <div style={{
+                background: '#1C1A17',
+                color: '#F4F2EF',
+                padding: '10px 14px',
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 300,
+                fontSize: '12px',
+                marginTop: '12px',
+                borderLeft: '3px solid #B08050',
+              }}>{visitMsg}</div>
+            )}
 
             <button
               onClick={() => recordVisit(selectedClient)}
               disabled={visitLoading}
-              className="w-full py-4 rounded-2xl font-bold text-white text-lg disabled:opacity-40 active:scale-95 transition-all"
-              style={{ background: brandColor }}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: visitLoading ? '#C8B89A' : '#B08050',
+                border: 'none',
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 800,
+                fontSize: '11px',
+                letterSpacing: '0.35em',
+                textTransform: 'uppercase',
+                color: '#F4F2EF',
+                cursor: visitLoading ? 'not-allowed' : 'pointer',
+                marginTop: '20px',
+              }}
             >
-              {visitLoading ? '...' : '+ Enregistrer une visite'}
+              {visitLoading ? 'ENREGISTREMENT...' : '+ ENREGISTRER UNE VISITE →'}
             </button>
           </div>
         </div>

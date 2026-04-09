@@ -4,10 +4,21 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Tenant } from '@/lib/types'
 
+const LU_LABEL: React.CSSProperties = {
+  fontFamily: 'Raleway, sans-serif',
+  fontWeight: 800,
+  fontSize: '10px',
+  letterSpacing: '0.25em',
+  textTransform: 'uppercase',
+  color: '#7A7670',
+  display: 'block',
+  marginBottom: '6px',
+}
+
 export default function BoardSettingsPage() {
   const router = useRouter()
   const [tenant, setTenant] = useState<Tenant | null>(null)
-  const [form, setForm] = useState({ name: '', phone: '', address: '', primary_color: '#6366f1' })
+  const [form, setForm] = useState({ name: '', phone: '', address: '', primary_color: '#B08050' })
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
 
@@ -32,7 +43,7 @@ export default function BoardSettingsPage() {
     setSaving(true)
     const supabase = createClient()
     await supabase.from('tenants').update({ name: form.name, phone: form.phone || null, address: form.address || null, primary_color: form.primary_color }).eq('id', tenant.id)
-    setMsg('✅ Sauvegardé')
+    setMsg('Sauvegardé')
     setTimeout(() => setMsg(''), 2000)
     setSaving(false)
   }
@@ -46,49 +57,162 @@ export default function BoardSettingsPage() {
   if (!tenant) return null
 
   return (
-    <div>
-      <div style={{ background: tenant.primary_color }} className="px-4 pt-10 pb-5">
-        <div className="max-w-lg mx-auto">
-          <h1 className="text-xl font-bold text-white">⚙️ Configuration</h1>
-          <p className="text-white/60 text-xs">{tenant.name}</p>
+    <div style={{ minHeight: '100vh', background: '#F4F2EF' }}>
+      {/* Header */}
+      <div style={{ background: '#1C1A17', padding: '40px 20px 24px' }}>
+        <div style={{ maxWidth: '512px', margin: '0 auto' }}>
+          <button
+            onClick={() => router.push('/board')}
+            style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 300,
+              fontSize: '11px',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: '#7A7670',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              marginBottom: '12px',
+              padding: 0,
+              display: 'block',
+            }}
+          >
+            ‹ Tableau de bord
+          </button>
+          <div style={{
+            fontFamily: 'Raleway, sans-serif',
+            fontWeight: 800,
+            fontSize: '18px',
+            color: '#F4F2EF',
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+          }}>Configuration</div>
+          <div style={{
+            fontFamily: 'DM Mono, monospace',
+            fontWeight: 300,
+            fontSize: '10px',
+            color: '#7A7670',
+            letterSpacing: '0.2em',
+            marginTop: '4px',
+          }}>{tenant.name}</div>
         </div>
       </div>
 
-      <div className="px-4 py-5 max-w-lg mx-auto space-y-4">
-        {msg && <div className="bg-green-50 text-green-700 px-4 py-3 rounded-2xl text-sm font-semibold">{msg}</div>}
+      {/* Content */}
+      <div style={{ maxWidth: '512px', margin: '0 auto', padding: '24px 20px' }}>
+        {msg && (
+          <div style={{
+            background: '#1C1A17',
+            color: '#F4F2EF',
+            padding: '12px 16px',
+            fontFamily: 'Raleway, sans-serif',
+            fontWeight: 300,
+            fontSize: '13px',
+            marginBottom: '16px',
+            borderLeft: '3px solid #B08050',
+          }}>
+            ✓ {msg}
+          </div>
+        )}
 
-        <div className="bg-white rounded-2xl p-5 space-y-4 shadow-sm">
-          {[
-            { key: 'name', label: 'Nom du commerce', type: 'text' },
-            { key: 'phone', label: 'Téléphone', type: 'tel' },
-            { key: 'address', label: 'Adresse', type: 'text' },
-          ].map(({ key, label, type }) => (
-            <div key={key}>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
-              <input type={type} value={(form as Record<string, string>)[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400" />
-            </div>
-          ))}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Couleur</label>
-            <div className="flex items-center gap-3">
-              <input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))}
-                className="w-12 h-12 rounded-xl border-2 border-gray-100 cursor-pointer p-1" />
-              <div className="flex gap-2">
-                {['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#1f2937'].map(c => (
-                  <button key={c} onClick={() => setForm(f => ({ ...f, primary_color: c }))}
-                    className={`w-7 h-7 rounded-full border-2 ${form.primary_color === c ? 'border-gray-800 scale-110' : 'border-transparent'}`}
-                    style={{ background: c }} />
-                ))}
+        <div style={{ background: '#fff', border: '1px solid #C8B89A', padding: '24px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {[
+              { key: 'name', label: 'Nom du commerce', type: 'text', placeholder: 'Ex: ISCUT BARBER' },
+              { key: 'phone', label: 'Téléphone', type: 'tel', placeholder: '+41 00 000 00 00' },
+              { key: 'address', label: 'Adresse', type: 'text', placeholder: 'Rue, Ville' },
+            ].map(({ key, label, type, placeholder }) => (
+              <div key={key}>
+                <label style={LU_LABEL}>{label}</label>
+                <input
+                  type={type}
+                  value={(form as Record<string, string>)[key]}
+                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  placeholder={placeholder}
+                  style={{
+                    width: '100%',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: '1px solid #C8B89A',
+                    padding: '8px 0',
+                    fontFamily: 'Raleway, sans-serif',
+                    fontWeight: 300,
+                    fontSize: '15px',
+                    color: '#1C1A17',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            ))}
+
+            <div>
+              <label style={LU_LABEL}>Couleur de la carte</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input
+                  type="color"
+                  value={form.primary_color}
+                  onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))}
+                  style={{ width: '44px', height: '44px', border: '1px solid #C8B89A', cursor: 'pointer', padding: '2px', background: 'none' }}
+                />
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {['#B08050', '#1C1A17', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'].map(c => (
+                    <button
+                      key={c}
+                      onClick={() => setForm(f => ({ ...f, primary_color: c }))}
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        background: c,
+                        border: form.primary_color === c ? '2px solid #1C1A17' : '2px solid transparent',
+                        cursor: 'pointer',
+                        transform: form.primary_color === c ? 'scale(1.15)' : 'none',
+                        transition: 'transform 0.15s',
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
+
+            <button
+              onClick={save}
+              disabled={saving}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: saving ? '#C8B89A' : '#B08050',
+                border: 'none',
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 800,
+                fontSize: '11px',
+                letterSpacing: '0.35em',
+                textTransform: 'uppercase',
+                color: '#F4F2EF',
+                cursor: saving ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {saving ? 'SAUVEGARDE...' : 'SAUVEGARDER →'}
+            </button>
           </div>
-          <button onClick={save} disabled={saving} className="w-full py-3.5 rounded-xl font-bold text-white disabled:opacity-50 active:scale-95 transition-all" style={{ background: tenant.primary_color }}>
-            {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-          </button>
         </div>
 
-        <button onClick={logout} className="w-full py-3.5 rounded-xl font-semibold text-red-500 bg-white border-2 border-red-100 active:scale-95 transition-all">
+        <button
+          onClick={logout}
+          style={{
+            width: '100%',
+            padding: '16px',
+            background: 'none',
+            border: '1px solid #C8B89A',
+            fontFamily: 'Raleway, sans-serif',
+            fontWeight: 300,
+            fontSize: '13px',
+            letterSpacing: '0.1em',
+            color: '#7A7670',
+            cursor: 'pointer',
+          }}
+        >
           Se déconnecter
         </button>
       </div>

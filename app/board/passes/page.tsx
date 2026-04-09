@@ -14,6 +14,15 @@ const PASS_TYPES = [
 
 const TYPE_LABELS: Record<string, string> = { fidelite: '⭐ Fidélité', visite: '👤 Visite', cadeau: '🎁 Cadeau', coupon: '🏷️ Coupon' }
 
+const LU_LABEL: React.CSSProperties = {
+  fontFamily: 'Raleway, sans-serif',
+  fontWeight: 800,
+  fontSize: '10px',
+  letterSpacing: '0.25em',
+  textTransform: 'uppercase',
+  color: '#7A7670',
+}
+
 export default function PassesPage() {
   const router = useRouter()
   const [tenant, setTenant] = useState<Tenant | null>(null)
@@ -104,70 +113,228 @@ export default function PassesPage() {
 
   const resetCreate = () => { setCreating(false); setStep(1); setPassType('' as PassType); setThreshold(10); setRewardDesc(''); setNewPass(null); setError('') }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-gray-400 animate-pulse">Chargement...</div></div>
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1C1A17' }}>
+      <div style={{ fontFamily: 'Raleway, sans-serif', fontWeight: 100, fontSize: '32px', color: '#F4F2EF', letterSpacing: '-0.02em' }}>
+        14 <span style={{ color: '#B08050' }}>Level Up</span>
+      </div>
+    </div>
+  )
 
   return (
-    <div>
-      <div style={{ background: tenant?.primary_color || '#6366f1' }} className="px-4 pt-10 pb-5">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
+    <div style={{ minHeight: '100vh', background: '#F4F2EF' }}>
+      {/* Header */}
+      <div style={{ background: '#1C1A17', padding: '40px 20px 24px' }}>
+        <div style={{ maxWidth: '512px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 className="text-xl font-bold text-white">💳 Cartes Wallet</h1>
-            <p className="text-white/60 text-xs">{passes.length} carte{passes.length !== 1 ? 's' : ''}</p>
+            <button
+              onClick={() => router.push('/board')}
+              style={{
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 300,
+                fontSize: '11px',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                color: '#7A7670',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                marginBottom: '8px',
+                padding: 0,
+                display: 'block',
+              }}
+            >
+              ‹ Tableau de bord
+            </button>
+            <div style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 800,
+              fontSize: '18px',
+              color: '#F4F2EF',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+            }}>Cartes Wallet</div>
+            <div style={{
+              fontFamily: 'DM Mono, monospace',
+              fontWeight: 300,
+              fontSize: '10px',
+              color: '#7A7670',
+              letterSpacing: '0.2em',
+              marginTop: '4px',
+            }}>{passes.length} carte{passes.length !== 1 ? 's' : ''}</div>
           </div>
           <button
             onClick={() => setCreating(true)}
-            className="bg-white text-sm font-bold px-4 py-2 rounded-xl active:scale-95 transition-all"
-            style={{ color: tenant?.primary_color }}
+            style={{
+              background: '#B08050',
+              color: '#F4F2EF',
+              border: 'none',
+              padding: '10px 18px',
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 800,
+              fontSize: '11px',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
           >
-            + Créer
+            + CRÉER
           </button>
         </div>
       </div>
 
-      <div className="px-4 py-4 max-w-lg mx-auto space-y-3">
+      {/* Content */}
+      <div style={{ maxWidth: '512px', margin: '0 auto', padding: '24px 20px' }}>
         {passes.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-5xl mb-3">💳</div>
-            <p className="text-gray-500 text-sm mb-4">Créez une carte Wallet — les clients l&apos;installent en scannant un QR</p>
-            <button onClick={() => setCreating(true)} className="px-6 py-3 rounded-xl font-bold text-white" style={{ background: tenant?.primary_color }}>⚡ Créer ma première carte</button>
+          <div style={{ textAlign: 'center', padding: '64px 0' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💳</div>
+            <p style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 200,
+              fontSize: '18px',
+              color: '#1C1A17',
+              marginBottom: '6px',
+            }}>Aucune carte encore</p>
+            <p style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 300,
+              fontSize: '13px',
+              color: '#7A7670',
+              marginBottom: '24px',
+            }}>Créez une carte Wallet — les clients l&apos;installent en scannant un QR</p>
+            <button
+              onClick={() => setCreating(true)}
+              style={{
+                background: '#B08050',
+                color: '#F4F2EF',
+                border: 'none',
+                padding: '14px 28px',
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 800,
+                fontSize: '11px',
+                letterSpacing: '0.25em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+              }}
+            >
+              CRÉER MA PREMIÈRE CARTE →
+            </button>
           </div>
-        ) : passes.map(p => (
-          <div key={p.id} onClick={() => setQrPass(p)} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm cursor-pointer active:scale-98 transition-all flex items-center justify-between">
-            <div>
-              <div className="font-bold text-gray-900">{TYPE_LABELS[p.type]}</div>
-              {p.reward_description && <div className="text-xs text-gray-500 mt-0.5">{p.reward_description}</div>}
-              <div className="text-xs text-gray-400 mt-1">{new Date(p.created_at).toLocaleDateString('fr-FR')}</div>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-2">
-              <QRCodeSVG value={`${appUrl}/install/${p.id}`} size={52} />
-            </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {passes.map(p => (
+              <button
+                key={p.id}
+                onClick={() => setQrPass(p)}
+                style={{
+                  background: '#fff',
+                  border: '1px solid #C8B89A',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  textAlign: 'left',
+                  width: '100%',
+                }}
+              >
+                <div>
+                  <div style={{
+                    fontFamily: 'Raleway, sans-serif',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    color: '#1C1A17',
+                  }}>{TYPE_LABELS[p.type]}</div>
+                  {p.reward_description && (
+                    <div style={{
+                      fontFamily: 'Raleway, sans-serif',
+                      fontWeight: 300,
+                      fontSize: '12px',
+                      color: '#7A7670',
+                      marginTop: '2px',
+                    }}>{p.reward_description}</div>
+                  )}
+                  <div style={{
+                    fontFamily: 'DM Mono, monospace',
+                    fontWeight: 300,
+                    fontSize: '10px',
+                    color: '#B0A090',
+                    marginTop: '4px',
+                  }}>{new Date(p.created_at).toLocaleDateString('fr-FR')}</div>
+                </div>
+                <div style={{ padding: '8px', background: '#F4F2EF', border: '1px solid #C8B89A' }}>
+                  <QRCodeSVG value={`${appUrl}/install/${p.id}`} size={48} />
+                </div>
+              </button>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
       {/* Create Modal */}
       {creating && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-3xl p-6 max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
-            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-gray-900">
-                {step === 1 && '⚡ Type de carte'}
-                {step === 2 && '🎯 Récompense'}
-                {step === 3 && '✅ Carte créée !'}
-              </h2>
-              <button onClick={resetCreate} className="text-gray-400 text-2xl leading-none">×</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(28,26,23,0.7)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{
+            background: '#F4F2EF',
+            width: '100%',
+            maxWidth: '512px',
+            margin: '0 auto',
+            padding: '28px 24px 32px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+          }}>
+            <div style={{ width: '32px', height: '2px', background: '#C8B89A', margin: '0 auto 20px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <p style={{
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 800,
+                fontSize: '13px',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: '#1C1A17',
+              }}>
+                {step === 1 && 'TYPE DE CARTE'}
+                {step === 2 && 'PARAMÈTRES'}
+                {step === 3 && 'CARTE CRÉÉE'}
+              </p>
+              <button
+                onClick={resetCreate}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#7A7670', lineHeight: 1 }}
+              >×</button>
             </div>
 
             {step === 1 && (
-              <div className="space-y-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {PASS_TYPES.map(t => (
-                  <button key={t.value} onClick={() => { setPassType(t.value); setStep(2) }}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-100 bg-white text-left active:scale-98 transition-all hover:border-indigo-200">
-                    <span className="text-3xl">{t.emoji}</span>
+                  <button
+                    key={t.value}
+                    onClick={() => { setPassType(t.value); setStep(2) }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '16px',
+                      padding: '16px',
+                      background: '#fff',
+                      border: '1px solid #C8B89A',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      width: '100%',
+                    }}
+                  >
+                    <span style={{ fontSize: '28px' }}>{t.emoji}</span>
                     <div>
-                      <div className="font-bold text-gray-900">{t.label}</div>
-                      <div className="text-xs text-gray-400">{t.desc}</div>
+                      <div style={{
+                        fontFamily: 'Raleway, sans-serif',
+                        fontWeight: 700,
+                        fontSize: '14px',
+                        color: '#1C1A17',
+                      }}>{t.label}</div>
+                      <div style={{
+                        fontFamily: 'Raleway, sans-serif',
+                        fontWeight: 300,
+                        fontSize: '12px',
+                        color: '#7A7670',
+                      }}>{t.desc}</div>
                     </div>
                   </button>
                 ))}
@@ -175,14 +342,27 @@ export default function PassesPage() {
             )}
 
             {step === 2 && (
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {passType === 'fidelite' && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Visites avant récompense</label>
-                    <div className="flex gap-2">
+                    <p style={{ ...LU_LABEL, marginBottom: '10px' }}>Visites avant récompense</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       {[5, 8, 10, 15, 20].map(n => (
-                        <button key={n} onClick={() => setThreshold(n)}
-                          className={`flex-1 py-3 rounded-xl font-bold text-lg border-2 transition-all ${threshold === n ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-100 text-gray-700'}`}>
+                        <button
+                          key={n}
+                          onClick={() => setThreshold(n)}
+                          style={{
+                            flex: 1,
+                            padding: '12px 0',
+                            background: threshold === n ? '#B08050' : '#fff',
+                            border: `1px solid ${threshold === n ? '#B08050' : '#C8B89A'}`,
+                            fontFamily: 'Raleway, sans-serif',
+                            fontWeight: 800,
+                            fontSize: '16px',
+                            color: threshold === n ? '#F4F2EF' : '#1C1A17',
+                            cursor: 'pointer',
+                          }}
+                        >
                           {n}
                         </button>
                       ))}
@@ -190,44 +370,122 @@ export default function PassesPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <p style={{ ...LU_LABEL, marginBottom: '8px' }}>
                     {passType === 'fidelite' ? 'Récompense offerte' : 'Description'}
-                  </label>
-                  <input type="text" value={rewardDesc} onChange={e => setRewardDesc(e.target.value)}
-                    placeholder={passType === 'fidelite' ? 'Ex: Café offert, -20%...' : 'Description de la carte...'}
-                    className="w-full border-2 border-gray-100 rounded-2xl px-4 py-3 focus:outline-none focus:border-indigo-400" />
+                  </p>
+                  <input
+                    type="text"
+                    value={rewardDesc}
+                    onChange={e => setRewardDesc(e.target.value)}
+                    placeholder={passType === 'fidelite' ? 'Ex: Café offert, -20%...' : 'Description...'}
+                    style={{
+                      width: '100%',
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: '1px solid #C8B89A',
+                      padding: '10px 0',
+                      fontFamily: 'Raleway, sans-serif',
+                      fontWeight: 300,
+                      fontSize: '15px',
+                      color: '#1C1A17',
+                      outline: 'none',
+                    }}
+                  />
                 </div>
-                {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl">{error}</div>}
-                <button onClick={generate} disabled={generating}
-                  className="w-full py-4 rounded-2xl font-bold text-white text-lg disabled:opacity-50 active:scale-95 transition-all"
-                  style={{ background: tenant?.primary_color }}>
-                  {generating ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                      Génération...
-                    </span>
-                  ) : '🎉 Générer la carte'}
+                {error && (
+                  <div style={{
+                    background: '#fff0f0',
+                    color: '#b00',
+                    fontSize: '12px',
+                    padding: '10px 14px',
+                    fontFamily: 'Raleway, sans-serif',
+                    fontWeight: 300,
+                  }}>{error}</div>
+                )}
+                <button
+                  onClick={generate}
+                  disabled={generating}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    background: generating ? '#C8B89A' : '#B08050',
+                    border: 'none',
+                    fontFamily: 'Raleway, sans-serif',
+                    fontWeight: 800,
+                    fontSize: '11px',
+                    letterSpacing: '0.35em',
+                    textTransform: 'uppercase',
+                    color: '#F4F2EF',
+                    cursor: generating ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {generating ? 'GÉNÉRATION EN COURS...' : 'GÉNÉRER LA CARTE →'}
                 </button>
               </div>
             )}
 
             {step === 3 && newPass && (
-              <div className="space-y-5 text-center">
-                <p className="text-gray-500 text-sm">Faites scanner ce QR par vos clients pour installer la carte sur leur Wallet</p>
-                <div className="flex justify-center">
-                  <div className="p-4 bg-white rounded-2xl shadow-md border border-gray-100">
-                    <QRCodeSVG value={`${appUrl}/install/${newPass.id}`} size={220} level="H" includeMargin />
-                  </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <p style={{
+                  fontFamily: 'Raleway, sans-serif',
+                  fontWeight: 300,
+                  fontSize: '13px',
+                  color: '#7A7670',
+                  textAlign: 'center',
+                }}>Faites scanner ce QR par vos clients pour installer la carte sur leur Wallet</p>
+                <div style={{ padding: '16px', background: '#fff', border: '1px solid #C8B89A' }}>
+                  <QRCodeSVG value={`${appUrl}/install/${newPass.id}`} size={200} level="H" includeMargin />
                 </div>
-                <p className="text-xs text-gray-300 break-all">{appUrl}/install/{newPass.id}</p>
+                <p style={{
+                  fontFamily: 'DM Mono, monospace',
+                  fontWeight: 300,
+                  fontSize: '9px',
+                  color: '#B0A090',
+                  wordBreak: 'break-all',
+                  textAlign: 'center',
+                }}>{appUrl}/install/{newPass.id}</p>
                 {newPass.install_url && (
-                  <a href={newPass.install_url} target="_blank" rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-white active:scale-95 transition-all text-sm"
-                    style={{ background: tenant?.primary_color }}>
-                    📱 Tester l&apos;installation
+                  <a
+                    href={newPass.install_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      padding: '14px',
+                      background: '#1C1A17',
+                      color: '#F4F2EF',
+                      textDecoration: 'none',
+                      fontFamily: 'Raleway, sans-serif',
+                      fontWeight: 800,
+                      fontSize: '11px',
+                      letterSpacing: '0.25em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    📱 TESTER L&apos;INSTALLATION →
                   </a>
                 )}
-                <button onClick={resetCreate} className="w-full py-3 rounded-2xl font-semibold text-gray-600 bg-gray-50 text-sm">Fermer</button>
+                <button
+                  onClick={resetCreate}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    background: 'none',
+                    border: '1px solid #C8B89A',
+                    fontFamily: 'Raleway, sans-serif',
+                    fontWeight: 300,
+                    fontSize: '13px',
+                    color: '#7A7670',
+                    cursor: 'pointer',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  Fermer
+                </button>
               </div>
             )}
           </div>
@@ -236,21 +494,62 @@ export default function PassesPage() {
 
       {/* QR Modal */}
       {qrPass && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end" onClick={() => setQrPass(null)}>
-          <div className="bg-white w-full rounded-t-3xl p-6 max-w-lg mx-auto" onClick={e => e.stopPropagation()}>
-            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
-            <h2 className="text-xl font-bold text-center mb-1">{TYPE_LABELS[qrPass.type]}</h2>
-            {qrPass.reward_description && <p className="text-center text-gray-400 text-sm mb-5">{qrPass.reward_description}</p>}
-            <div className="flex justify-center mb-4">
-              <div className="p-4 bg-white rounded-2xl shadow-md border border-gray-100">
-                <QRCodeSVG value={`${appUrl}/install/${qrPass.id}`} size={220} level="H" includeMargin />
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(28,26,23,0.7)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}
+          onClick={() => setQrPass(null)}
+        >
+          <div
+            style={{ background: '#F4F2EF', width: '100%', maxWidth: '512px', margin: '0 auto', padding: '28px 24px 32px' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ width: '32px', height: '2px', background: '#C8B89A', margin: '0 auto 20px' }} />
+            <p style={{
+              fontFamily: 'Raleway, sans-serif',
+              fontWeight: 800,
+              fontSize: '14px',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: '#1C1A17',
+              textAlign: 'center',
+              marginBottom: '4px',
+            }}>{TYPE_LABELS[qrPass.type]}</p>
+            {qrPass.reward_description && (
+              <p style={{
+                fontFamily: 'Raleway, sans-serif',
+                fontWeight: 300,
+                fontSize: '13px',
+                color: '#7A7670',
+                textAlign: 'center',
+                marginBottom: '20px',
+              }}>{qrPass.reward_description}</p>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <div style={{ padding: '16px', background: '#fff', border: '1px solid #C8B89A' }}>
+                <QRCodeSVG value={`${appUrl}/install/${qrPass.id}`} size={200} level="H" includeMargin />
               </div>
             </div>
             {qrPass.install_url && (
-              <a href={qrPass.install_url} target="_blank" rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white active:scale-95 transition-all"
-                style={{ background: tenant?.primary_color }}>
-                📱 Tester l&apos;installation
+              <a
+                href={qrPass.install_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '16px',
+                  background: '#B08050',
+                  color: '#F4F2EF',
+                  textDecoration: 'none',
+                  fontFamily: 'Raleway, sans-serif',
+                  fontWeight: 800,
+                  fontSize: '11px',
+                  letterSpacing: '0.25em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                📱 TESTER L&apos;INSTALLATION →
               </a>
             )}
           </div>
