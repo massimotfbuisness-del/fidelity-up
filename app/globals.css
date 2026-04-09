@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;300;700;800&family=DM+Mono:wght@300&display=swap');
 @import "tailwindcss";
 
 @keyframes scan {
@@ -6,6 +7,14 @@
 }
 
 :root {
+  /* 14 Level Up — Palette officielle */
+  --lu-ivoire:  #F4F2EF;
+  --lu-encre:   #1C1A17;
+  --lu-ambre:   #B08050;
+  --lu-sable:   #C8B89A;
+  --lu-pierre:  #7A7670;
+
+  /* Compat legacy (tenant couleur) */
   --brand: #6366f1;
   --brand-dark: #4f46e5;
 }
@@ -15,7 +24,9 @@
 }
 
 body {
-  background: #f9fafb;
-  color: #111827;
+  background: var(--lu-ivoire);
+  color: var(--lu-encre);
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-weight: 300;
   -webkit-tap-highlight-color: transparent;
 }
